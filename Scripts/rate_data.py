@@ -89,10 +89,10 @@ def main() -> int:
                         print("\nInput ended; leaving remaining ratings blank.")
                         rating = ""
                         break
-                    if rating in {"0", "1"}:
+                    if rating in {"0", "1", "2"}:
                         rating = int(rating)
                         break
-                    print("Please enter a rating, 0 for bad, 1 for good, or Ctrl-D to leave it blank.")
+                    print("Please enter a rating, 0 for bad, 1 for good, or 2 for unsure, or Ctrl-D to leave it blank.")
             finally:
                 if plot_process.poll() is None:
                     plot_process.terminate()
