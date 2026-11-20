@@ -2,11 +2,13 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
+from scipy.signal import hilbert
 from obspy.core import read
 from pathlib import Path
 
 def cut_waveforms(data, half_window_length, half_cut_length, sample_rate):
     n_data = len(data)
+
     l1 = int(n_data / 2) - round(half_window_length * sample_rate)
     l2 = int(n_data / 2) + round(half_window_length * sample_rate)
 
@@ -17,7 +19,7 @@ def cut_waveforms(data, half_window_length, half_cut_length, sample_rate):
     return data[cut_start:cut_end] / data[round(l1 + idx)]
 
 def lookup_arrival_time(tr, phase):
-    table_name = f"./aux/{phase}_traveltime.npz"
+    table_name = f"../aux/{phase}_traveltime.npz"
     if not Path(table_name).exists():
         raise FileNotFoundError(f"Travel time table {table_name} not found.")
     data = np.load(table_name)
@@ -34,12 +36,17 @@ def main():
   
     
     sac_path = Path(sys.argv[1])
-    tr = read(sac_path)[0] 
+    tr = read(sac_path)[0]
+    sample_rate = 1
+    tr.resample(sample_rate)
+    tr.differentiate('gradient')
+    tr.differentiate('gradient')
+    tr.data = np.imag(hilbert(tr.data))
+    tr.detrend('demean')
     tr.filter('bandpass', freqmin=0.02, freqmax=0.1, corners=4, zerophase=True)    
     tr.detrend('linear')
     tr.taper(max_percentage=0.05, type='cosine')
-    sample_rate = 1
-    tr.resample(sample_rate)
+    
     
     SS_arr = lookup_arrival_time(tr, 'SS')
     S410S_arr = lookup_arrival_time(tr, 'S^410S')

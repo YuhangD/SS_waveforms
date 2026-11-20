@@ -24,7 +24,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 
 
 def parse_args() -> argparse.Namespace:
@@ -54,18 +54,21 @@ def main() -> int:
     else:
         sheet = workbook.active
 
-    # Add ratings in the next column, preserving every source row and its order.
-    rating_col = sheet.max_column + 1
-    sheet.cell(row=1, column=rating_col, value=args.rating_header)
+    rating_book = Workbook()
+    rating_sheet = rating_book.active
+    rating_sheet.title = "Ratings"
+    rating_sheet.cell(row=1, column=1, value="Name")
+    rating_sheet.cell(row=1, column=2, value=args.rating_header)
     for row in range(2, sheet.max_row + 1):
         name = sheet.cell(row=row, column=7).value
+        rating_sheet.cell(row=row, column=1, value=name)
         if name is None or str(name).strip() == "":
             continue
 
         year = name.split("_")[1]
         data_file = Path(f"{args.prefix}/{year}/{str(name).strip()}{args.suffix}")
       
-        print(f"\nRow {row}: {name} -> {data_file}")
+        print(f"\nRow {row}/{sheet.max_row}: {data_file}")
         if not data_file.is_file():
             print("File not found. Rating this row as missing.")
             rating = None
@@ -100,10 +103,10 @@ def main() -> int:
                         plot_process.kill()
                         plot_process.wait()
 
-        sheet.cell(row=row, column=rating_col, value=rating)
+        rating_sheet.cell(row=row, column=2, value=rating)
 
     output = args.output or args.workbook.with_name(f"{args.workbook.stem}_ratings.xlsx")
-    workbook.save(output)
+    rating_book.save(output)
     print(f"Saved ratings to {output}")
     return 0
 
