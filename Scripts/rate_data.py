@@ -84,7 +84,7 @@ def main() -> int:
             try:
                 while True:
                     try:
-                        rating = input("Rate data quality (0 = bad, 1 = good): ").strip()
+                        rating = input("Rate data quality (0 = bad, 1 = good， 2 = unsure): ").strip()
                     except EOFError:
                         print("\nInput ended; leaving remaining ratings blank.")
                         rating = ""
